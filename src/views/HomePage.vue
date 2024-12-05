@@ -2,123 +2,100 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>Home</ion-title>
+        <ion-title>Toy Story</ion-title>
       </ion-toolbar>
     </ion-header>
 
-    <!-- modifikasi src/views/HomePage.vue pada bagian ion-content dalam template -->
     <ion-content :fullscreen="true">
-      <!-- komponen paling atas dari ion-content -->
       <ion-refresher slot="fixed" :pull-factor="0.5" :pull-min="100" :pull-max="200"
         @ionRefresh="handleRefresh($event)">
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <!-- komponen utama di antara 2 komponen ini -->
-      <!-- bagian refresher -->
-
-      <!-- active todos -->
       <div class="scrollable-container">
         <ion-list>
-          <ion-item-sliding v-for="todo in activeTodos" :key="todo.id" :ref="(el) => setItemRef(el, todo.id!)">
-            <ion-item-options side="start" @ionSwipe="handleDelete(todo)">
-              <ion-item-option color="danger" expandable @click="handleDelete(todo)">
-                <ion-icon slot="icon-only" :icon="trash" size="large"></ion-icon>
+          <ion-item-sliding v-for="toystory in activetoystorys" :key="toystory.id" ref="setItemRef(toystory.id)">
+            <ion-item>
+              <div class="clickable-zone" @click="showtoystoryDetail(toystory)">
+                <ion-card class="full-width-card">
+                  <ion-card-header>
+                    <ion-card-title>{{ toystory.toy }}</ion-card-title>
+                    <ion-card-subtitle>{{
+                      toystory.story
+                      }}</ion-card-subtitle>
+                  </ion-card-header>
+                  <ion-card-content>
+                    <ion-badge color="primary">{{
+                      getRelativeTime(toystory.updatedAt)
+                      }}</ion-badge>
+                  </ion-card-content>
+                </ion-card>
+              </div>
+            </ion-item>
+
+            <!-- Slide Right to Edit -->
+            <ion-item-options side="start">
+              <ion-item-option color="primary" @click="handleEdit(toystory)">
+                <ion-icon :icon="create" slot="start"></ion-icon>
+                Edit
               </ion-item-option>
             </ion-item-options>
 
-            <ion-item>
-              <ion-card>
-                <ion-card-header>
-                  <ion-card-title class="ion-text-wrap limited-text">{{ todo.title }}</ion-card-title>
-                  <ion-card-subtitle class="limited-text">{{ todo.description }}</ion-card-subtitle>
-                </ion-card-header>
-
-                <ion-card-content>
-                  <ion-badge>{{ getRelativeTime(todo.updatedAt) }}</ion-badge>
-                </ion-card-content>
-              </ion-card>
-            </ion-item>
-
-            <ion-item-options side="end" @ionSwipe="handleStatus(todo)">
-              <ion-item-option @click="handleEdit(todo)">
-                <ion-icon slot="icon-only" :icon="create" size="large"></ion-icon>
-              </ion-item-option>
-              <ion-item-option color="success" expandable @click="handleStatus(todo)">
-                <ion-icon slot="icon-only" :icon="checkmarkCircle" color="light" size="large"></ion-icon>
+            <!-- Slide Left to Delete -->
+            <ion-item-options side="end">
+              <ion-item-option color="danger" @click="confirmDelete(toystory)">
+                <ion-icon :icon="trash" slot="start"></ion-icon>
+                Delete
               </ion-item-option>
             </ion-item-options>
           </ion-item-sliding>
-          <ion-item v-if="activeTodos.length === 0" class="ion-text-center">
-            <ion-label>No active todos</ion-label>
+
+          <ion-item v-if="activetoystorys.length === 0" class="ion-text-center">
+            <ion-label>Let's make a good memory!</ion-label>
           </ion-item>
         </ion-list>
+
+        <!-- Detail Modal -->
+        <ion-modal :is-open="isDetailModalOpen" @didDismiss="isDetailModalOpen = false">
+          <ion-header>
+            <ion-toolbar>
+              <ion-title>{{ selectedtoystory?.toy }}</ion-title>
+              <ion-buttons slot="end">
+                <ion-button @click="isDetailModalOpen = false">
+                  <ion-icon :icon="close"></ion-icon>
+                </ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content>
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>{{ selectedtoystory?.toy }}</ion-card-title>
+                <ion-card-subtitle>{{
+                  selectedtoystory?.story
+                  }}</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <p>
+                  Last updated: {{ getRelativeTime(selectedtoystory?.updatedAt) }}
+                </p>
+              </ion-card-content>
+            </ion-card>
+          </ion-content>
+        </ion-modal>
       </div>
 
-      <!-- completed todos -->
-      <ion-item class="accordion-container">
-        <ion-accordion-group>
-          <ion-accordion value="first">
-            <ion-item slot="header" color="light">
-              <ion-label class="ion-text-center">Completed</ion-label>
-            </ion-item>
-            <div slot="content" class="scrollable-container">
-              <ion-list>
-                <ion-item-sliding v-for="todo in completedTodos" :key="todo.id" :ref="(el) => setItemRef(el, todo.id!)">
-                  <ion-item-options side="start" @ionSwipe="handleDelete(todo)">
-                    <ion-item-option color="danger" expandable @click="handleDelete(todo)">
-                      <ion-icon slot="icon-only" :icon="trash" size="large"></ion-icon>
-                    </ion-item-option>
-                  </ion-item-options>
-
-                  <ion-item>
-                    <ion-card>
-                      <ion-card-header>
-                        <ion-card-title class="ion-text-wrap limited-text">{{ todo.title }}</ion-card-title>
-                        <ion-card-subtitle class="limited-text">{{ todo.description }}</ion-card-subtitle>
-                      </ion-card-header>
-
-                      <ion-card-content>
-                        <ion-badge>{{ getRelativeTime(todo.updatedAt) }}</ion-badge>
-                      </ion-card-content>
-                    </ion-card>
-                  </ion-item>
-
-                  <ion-item-options side="end" @ionSwipe="handleStatus(todo)">
-                    <ion-item-option @click="handleEdit(todo)">
-                      <ion-icon slot="icon-only" :icon="create" size="large"></ion-icon>
-                    </ion-item-option>
-                    <ion-item-option color="warning" expandable @click="handleStatus(todo)">
-                      <ion-icon slot="icon-only" :icon="close" color="light" size="large"></ion-icon>
-                    </ion-item-option>
-                  </ion-item-options>
-                </ion-item-sliding>
-                <ion-item v-if="completedTodos.length === 0" class="ion-text-center">
-                  <ion-label>No completed todos</ion-label>
-                </ion-item>
-              </ion-list>
-            </div>
-          </ion-accordion>
-        </ion-accordion-group>
-      </ion-item>
-
-      <!-- bagian tombol dan modal -->
-
-
-      <!-- komponen paling bawah dari ion-content -->
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button @click="isOpen = true;">
+        <ion-fab-button @click="isOpen = true">
           <ion-icon :icon="add" size="large"></ion-icon>
         </ion-fab-button>
       </ion-fab>
-      <InputModal v-model:isOpen="isOpen" v-model:editingId="editingId" :todo="todo" @submit="handleSubmit" />
+      <InputModal v-model:isOpen="isOpen" v-model:editingId="editingId" :toystory="toystory" @submit="handleSubmit" />
     </ion-content>
-
   </ion-page>
 </template>
 
 <script setup lang="ts">
-
 import {
   IonContent,
   IonHeader,
@@ -145,8 +122,8 @@ import {
   loadingController,
   IonRefresher,
   IonRefresherContent,
-  toastController
-} from '@ionic/vue';
+  toastController,
+} from "@ionic/vue";
 import {
   add,
   checkmarkCircle,
@@ -154,23 +131,60 @@ import {
   create,
   trash,
   closeCircle,
-  warningOutline
-} from 'ionicons/icons';
-import InputModal from '../components/InputModal.vue';
-import { onMounted, ref, computed, onUnmounted } from 'vue';
-import { firestoreService, type Todo } from '@/utils/firestore';
-import { formatDistanceToNow } from 'date-fns';
+  warningOutline,
+} from "ionicons/icons";
+import InputModal from "@/components/InputModal.vue";
+import { onMounted, ref, computed, onUnmounted } from "vue";
+import { firestoreService, type toystory } from "@/utils/firestore";
+import { formatDistanceToNow } from "date-fns";
+import { alertController } from "@ionic/vue";
+import { IonModal, IonButtons, IonButton } from "@ionic/vue";
 
-// modifikasi src/views/HomePage.vue deklarasikan variabel yang akan digunakan
+const isDetailModalOpen = ref(false);
+const selectedtoystory = ref<toystory | null>(null);
+
+const showtoystoryDetail = (toystory: toystory) => {
+  selectedtoystory.value = toystory;
+  isDetailModalOpen.value = true;
+};
+
+const confirmDelete = async (toystory: toystory) => {
+  const alert = await alertController.create({
+    header: "Confirm Delete",
+    message: `Are you sure you want to delete ${toystory.toy}?`,
+    buttons: [
+      {
+        text: "Cancel",
+        role: "cancel",
+        handler: () => {
+          console.log("Delete canceled");
+        },
+      },
+      {
+        text: "Delete",
+        role: "destructive",
+        handler: async () => {
+          await handleDelete(toystory);
+        },
+      },
+    ],
+  });
+  await alert.present();
+};
+
 const isOpen = ref(false);
 const editingId = ref<string | null>(null);
-const todos = ref<Todo[]>([]);
-const todo = ref<Omit<Todo, 'id' | 'createdAt' | 'updatedAt' | 'status'>>({
-  title: '',
-  description: '',
+const toystorys = ref<toystory[]>([]);
+const toystory = ref<Omit<toystory, "id" | "createdAt" | "updatedAt" | "status">>({
+  toy: "",
+  story: "",
 });
-const activeTodos = computed(() => todos.value.filter(todo => !todo.status));
-const completedTodos = computed(() => todos.value.filter(todo => todo.status));
+const activetoystorys = computed(() =>
+  toystorys.value.filter((toystory) => !toystory.status)
+);
+const completedtoystorys = computed(() =>
+  toystorys.value.filter((toystory) => toystory.status)
+);
 const itemRefs = ref<Map<string, HTMLIonItemSlidingElement>>(new Map());
 let intervalId: any;
 const timeUpdateTrigger = ref(0);
@@ -183,13 +197,17 @@ const setItemRef = (el: any, id: string) => {
 };
 
 // toast notifikasi
-const showToast = async (message: string, color: string = 'success', icon: string = checkmarkCircle) => {
+const showToast = async (
+  message: string,
+  color: string = "success",
+  icon: string = checkmarkCircle
+) => {
   const toast = await toastController.create({
     message,
     duration: 2000,
     color,
-    position: 'top',
-    icon
+    position: "top",
+    icon,
   });
   await toast.present();
 };
@@ -201,56 +219,21 @@ const getRelativeTime = (date: any) => {
     const jsDate = date?.toDate ? date.toDate() : new Date(date);
     return formatDistanceToNow(jsDate, { addSuffix: true });
   } catch (error) {
-    return 'Invalid date';
+    return "Invalid date";
   }
 };
 
-// handle swipe refresher
-const handleRefresh = async (event: any) => {
-  try {
-    await loadTodos(false);
-  } catch (error) {
-    console.error('Error refreshing:', error);
-  } finally {
-    event.target.complete();
-  }
-};
-
-// handle submit add/edit pada modal
-const handleSubmit = async (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => {
-  if (!todo.title) {
-    await showToast('Title is required', 'warning', warningOutline);
-    return;
-  }
-  try {
-    if (editingId.value) {
-      await firestoreService.updateTodo(editingId.value, todo as Todo);
-      await showToast('Todo updated successfully', 'success', checkmarkCircle);
-    } else {
-      await firestoreService.addTodo(todo as Todo);
-      await showToast('Todo added successfully', 'success', checkmarkCircle);
-    }
-    loadTodos();
-  } catch (error) {
-    await showToast('An error occurred', 'danger', closeCircle);
-    console.error(error);
-  } finally {
-    editingId.value = null;
-  }
-};
-
-// load data
-const loadTodos = async (isLoading = true) => {
+const loadtoystorys = async (isLoading = true) => {
   let loading;
   if (isLoading) {
     loading = await loadingController.create({
-      message: 'Loading...'
+      message: "Loading...",
     });
     await loading.present();
   }
 
   try {
-    todos.value = await firestoreService.getTodos();
+    toystorys.value = await firestoreService.getGlobaltoystorys();
   } catch (error) {
     console.error(error);
   } finally {
@@ -262,7 +245,7 @@ const loadTodos = async (isLoading = true) => {
 
 // dijalankan setiap halaman diload, load data dan set interval update 1 menit
 onMounted(() => {
-  loadTodos();
+  loadtoystorys();
   intervalId = setInterval(() => {
     timeUpdateTrigger.value++;
   }, 60000);
@@ -273,55 +256,116 @@ onUnmounted(() => {
   clearInterval(intervalId);
 });
 
-// handle edit click
-const handleEdit = async (editTodo: Todo) => {
-  const slidingItem = itemRefs.value.get(editTodo.id!);
+// handle swipe refresher
+const handleRefresh = async (event: any) => {
+  try {
+    await loadtoystorys(false);
+  } catch (error) {
+    console.error("Error refreshing:", error);
+  } finally {
+    event.target.complete();
+  }
+};
+
+// handle submit add/edit pada modal
+const handleSubmit = async (
+  toystory: Omit<toystory, "id" | "createdAt" | "updatedAt" | "status">
+) => {
+  if (!toystory.toy) {
+    await showToast("Toy is required", "warning", warningOutline);
+    return;
+  }
+  try {
+    if (editingId.value) {
+      await firestoreService.updatetoystory(editingId.value, toystory as toystory);
+      await showToast(
+        "Data updated successfully",
+        "success",
+        checkmarkCircle
+      );
+    } else {
+      await firestoreService.addtoystoryGlobal(toystory as toystory);
+      await showToast("Data added successfully", "success", checkmarkCircle);
+    }
+    loadtoystorys();
+  } catch (error) {
+    await showToast("An error occurred", "danger", closeCircle);
+    console.error(error);
+  } finally {
+    editingId.value = null;
+  }
+};
+
+const handleEdit = async (edittoystory: toystory) => {
+  const slidingItem = itemRefs.value.get(edittoystory.id!);
   await slidingItem?.close();
 
-  editingId.value = editTodo.id!;
-  todo.value = {
-    title: editTodo.title,
-    description: editTodo.description,
-  }
+  editingId.value = edittoystory.id!;
+  toystory.value = {
+    toy: edittoystory.toy,
+    story: edittoystory.story,
+  };
   isOpen.value = true;
-}
+};
 
 // handle delete click/swipe
-const handleDelete = async (deleteTodo: Todo) => {
+const handleDelete = async (deletetoystory: toystory) => {
   try {
-    await firestoreService.deleteTodo(deleteTodo.id!);
-    await showToast('Todo deleted successfully', 'success', checkmarkCircle);
-    loadTodos();
+    await firestoreService.deletetoystory(deletetoystory.id!);
+    await showToast("Data deleted successfully", "success", checkmarkCircle);
+    loadtoystorys();
   } catch (error) {
-    await showToast('Failed to delete todo', 'danger', closeCircle);
+    await showToast("Failed to delete the Data", "danger", closeCircle);
     console.error(error);
   }
 };
 
-// handle status click/swipe, mengubah status todo active (false)/completed (true)
-const handleStatus = async (statusTodo: Todo) => {
-  const slidingItem = itemRefs.value.get(statusTodo.id!);
+const handleStatus = async (statustoystory: toystory) => {
+  const slidingItem = itemRefs.value.get(statustoystory.id!);
   await slidingItem?.close();
   try {
-    await firestoreService.updateStatus(statusTodo.id!, !statusTodo.status);
+    await firestoreService.updateStatus(statustoystory.id!, !statustoystory.status);
     await showToast(
-      `Todo marked as ${!statusTodo.status ? 'completed' : 'active'}`,
-      'success',
+      `Toy Story marked as ${!statustoystory.status ? "completed" : "active"}`,
+      "success",
       checkmarkCircle
     );
-    loadTodos();
+    loadtoystorys();
   } catch (error) {
-    await showToast('Failed to update status', 'danger', closeCircle);
+    await showToast("Failed to update status", "danger", closeCircle);
     console.error(error);
   }
 };
-
 </script>
 
+<!-- modifikasi src/views/HomePage.vue tambahkan keseluruhan style -->
 <style scoped>
-ion-card,
 ion-accordion-group {
   width: 100%;
+}
+
+ion-card {
+  margin: 16px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+ion-card-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #000;
+}
+
+ion-card-subtitle {
+  color: #666;
+  font-size: 0.9em;
+}
+
+ion-badge {
+  margin-top: 8px;
+  font-size: 0.8em;
+  padding: 6px;
+  border-radius: 12px;
 }
 
 ion-fab {
@@ -343,6 +387,19 @@ ion-card-title.limited-text {
 ion-card-subtitle.limited-text {
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+.full-width-card {
+  width: 100%;
+  margin: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+ion-item {
+  --inner-padding-start: 0;
+  --inner-padding-end: 0;
+  --padding-start: 0;
 }
 
 .scrollable-container {
